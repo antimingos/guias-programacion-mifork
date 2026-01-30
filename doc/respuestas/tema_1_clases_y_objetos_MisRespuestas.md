@@ -174,11 +174,6 @@ class Punto {
 ## 13. AÃ±ade ahora otro nuevo mÃ©todo que se llame `distanciaA`, que reciba un `Punto` como parÃ¡metro y calcule la distancia entre `this` y el punto proporcionado
 
 ### Respuesta
-
-
-## 14. El paso del `Punto` como parÃ¡metro a un mÃ©todo, es **por copia** o **por referencia**, es decir, si se cambia el valor de algÃºn atributo del punto pasado como parÃ¡metro, dichos cambios afectan al objeto fuera del mÃ©todo? Â¿QuÃ© ocurre si en vez de un `Punto`, se recibiese un entero (`int`) y dicho entero se modificase dentro de la funciÃ³n? 
-
-### Respuesta
 Para añadir el método distanciaA, se aprovecha que cada objeto conoce sus propios atributos mediante this y que puede acceder a los atributos del otro objeto recibido como parámetro. El método calcula la distancia entre dos puntos aplicando la fórmula matemática habitual entre coordenadas en el plano.
 
 El parámetro de tipo Punto representa otro objeto, distinto del actual. Usar this deja claro que una parte de la operación se realiza con el punto que llama al método, lo que ayuda a entender mejor el código y evita ambigüedades.
@@ -202,6 +197,21 @@ class Punto {
     }
 }
 
+
+## 14. El paso del `Punto` como parÃ¡metro a un mÃ©todo, es **por copia** o **por referencia**, es decir, si se cambia el valor de algÃºn atributo del punto pasado como parÃ¡metro, dichos cambios afectan al objeto fuera del mÃ©todo? Â¿QuÃ© ocurre si en vez de un `Punto`, se recibiese un entero (`int`) y dicho entero se modificase dentro de la funciÃ³n? 
+
+### Respuesta
+En Java, cuando pasas un objeto como un Punto a un método, lo que realmente se pasa es una copia de la referencia al objeto, no el objeto completo. Esto significa que dentro del método puedes modificar los atributos del objeto y esos cambios sí afectarán al objeto original fuera del método, porque ambos, la variable original y la copia de la referencia, apuntan al mismo espacio de memoria donde se almacenan los datos.
+
+Sin embargo, si dentro del método reasignas la referencia a un nuevo objeto (por ejemplo, p = new Punto(0,0)), esto no afecta a la referencia original fuera del método, porque solo estás cambiando la copia local de la referencia.
+
+En cambio, cuando pasas un tipo primitivo como int, double o boolean, Java lo hace por valor. Esto significa que dentro del método se trabaja con una copia del valor y cualquier cambio realizado no afecta al valor original fuera del método. Por ejemplo:
+
+void incrementar(int n) {
+    n = n + 1; // Solo cambia la copia local
+}
+
+Aquí, el entero original permanece igual después de la llamada, mientras que en un objeto como Punto, modificar sus atributos sí altera el objeto original. Esto refleja la diferencia clave entre tipos primitivos y objetos en Java: los objetos son siempre manejados a través de referencias.
 
 ## 15. Â¿QuÃ© es el mÃ©todo `toString()` en Java? Â¿Existe en otros lenguajes? Pon un ejemplo de `toString()` en la clase `Punto` en Java
 
