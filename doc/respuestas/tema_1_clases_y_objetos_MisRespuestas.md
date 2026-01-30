@@ -142,7 +142,6 @@ class Empleado {
         this.apellidos = apellidos;
     }
 }
-
 // Ejemplo de uso:
 public class Main {
     public static void main(String[] args) {
@@ -155,6 +154,21 @@ En este ejemplo, al usar new Empleado(...) se crea un objeto Empleado y se inici
 ## 12. Â¿QuÃ© es la referencia `this`? Â¿Se llama igual en todos los lenguajes? Pon un ejemplo del uso de `this` en la clase `Punto`
 
 ### Respuesta
+La referencia this es una variable implícita que existe dentro de los métodos de una clase y que apunta al objeto actual, es decir, a la instancia sobre la que se está ejecutando el método. Permite acceder de forma explícita a los atributos y métodos del propio objeto, algo útil cuando hay ambigüedad entre atributos y parámetros.
+Ejemplo de uso de this en la clase Punto, donde se utiliza para diferenciar los atributos de la clase de los parámetros del constructor:
+class Punto {
+    double x;
+    double y;
+
+    Punto(double x, double y) {
+        this.x = x;
+        this.y = y;
+    }
+
+    double calculaDistanciaAOrigen() {
+        return Math.sqrt(this.x * this.x + this.y * this.y);
+    }
+}
 
 
 ## 13. AÃ±ade ahora otro nuevo mÃ©todo que se llame `distanciaA`, que reciba un `Punto` como parÃ¡metro y calcule la distancia entre `this` y el punto proporcionado
@@ -165,19 +179,72 @@ En este ejemplo, al usar new Empleado(...) se crea un objeto Empleado y se inici
 ## 14. El paso del `Punto` como parÃ¡metro a un mÃ©todo, es **por copia** o **por referencia**, es decir, si se cambia el valor de algÃºn atributo del punto pasado como parÃ¡metro, dichos cambios afectan al objeto fuera del mÃ©todo? Â¿QuÃ© ocurre si en vez de un `Punto`, se recibiese un entero (`int`) y dicho entero se modificase dentro de la funciÃ³n? 
 
 ### Respuesta
+Para añadir el método distanciaA, se aprovecha que cada objeto conoce sus propios atributos mediante this y que puede acceder a los atributos del otro objeto recibido como parámetro. El método calcula la distancia entre dos puntos aplicando la fórmula matemática habitual entre coordenadas en el plano.
+
+El parámetro de tipo Punto representa otro objeto, distinto del actual. Usar this deja claro que una parte de la operación se realiza con el punto que llama al método, lo que ayuda a entender mejor el código y evita ambigüedades.
+class Punto {
+    double x;
+    double y;
+
+    Punto(double x, double y) {
+        this.x = x;
+        this.y = y;
+    }
+
+    double calculaDistanciaAOrigen() {
+        return Math.sqrt(this.x * this.x + this.y * this.y);
+    }
+
+    double distanciaA(Punto otro) {
+        double dx = this.x - otro.x;
+        double dy = this.y - otro.y;
+        return Math.sqrt(dx * dx + dy * dy);
+    }
+}
 
 
 ## 15. Â¿QuÃ© es el mÃ©todo `toString()` en Java? Â¿Existe en otros lenguajes? Pon un ejemplo de `toString()` en la clase `Punto` en Java
 
 ### Respuesta
+El método toString() en Java es un método especial que sirve para obtener una representación en forma de texto de un objeto. Está definido en la clase base Object, de la que heredan todas las clases en Java, y se usa automáticamente en situaciones como imprimir un objeto con System.out.println. Si no se redefine, muestra una información poco útil basada en la dirección de memoria.
+class Punto {
+    double x;
+    double y;
+
+    Punto(double x, double y) {
+        this.x = x;
+        this.y = y;
+    }
+
+    @Override
+    public String toString() {
+        return "(" + x + ", " + y + ")";
+    }
+}
 
 
 ## 16. Reflexiona: Â¿una clase es como un `struct` en C? Â¿QuÃ© le falta al `struct` para ser como una clase y las variables de ese tipo ser instancias?
 
 
 ### Respuesta
+Una clase se parece a un struct en C, en el sentido de que ambos permiten agrupar datos relacionados bajo un mismo tipo. Desde ese punto de vista, una clase puede verse como una evolución natural del struct, pensada para manejar programas más grandes y complejos de forma más organizada.
 
+Sin embargo, al struct de C le faltan varios elementos clave para ser como una clase. En primer lugar, no puede incluir métodos que formen parte del tipo; las funciones que operan sobre un struct están separadas y deben recibirlo como parámetro. Tampoco existe el concepto de constructor, por lo que la inicialización debe hacerse manualmente.
+
+Además, el struct no ofrece encapsulación ni control de acceso: todos sus campos son públicos y pueden modificarse libremente. En una clase, los datos y el comportamiento están unidos, los objetos son instancias creadas a partir de la clase, y el propio lenguaje refuerza estas reglas, lo que hace el código más seguro y mantenible.
 
 ## 17. Quitemos un poco de magia a todo esto: Â¿Como se podrÃ­a â€œemularâ€, con `struct` en C, la clase `Punto`, con su funciÃ³n para calcular la distancia al origen? Â¿QuÃ© ha pasado con `this`?
 
 ### Respuesta
+En C se puede emular una clase usando un struct para representar los datos y una función que opere sobre ese struct. De este modo, el struct Punto contendría los atributos x e y, y una función recibiría un puntero a dicho struct para calcular la distancia al origen. Esto es una forma habitual de organizar código en C cuando se quiere imitar un estilo orientado a objetos.
+#include <math.h>
+
+typedef struct {
+    double x;
+    double y;
+} Punto;
+
+double calculaDistanciaAOrigen(Punto *p) {
+    return sqrt(p->x * p->x + p->y * p->y);
+}
+En este caso, la función calculaDistanciaAOrigen recibe explícitamente un puntero al struct Punto. Ese puntero cumple el mismo papel que this en Java: indica sobre qué “objeto” se está trabajando. La diferencia es que en C el programador debe pasar ese puntero manualmente, mientras que en Java el lenguaje lo hace de forma implícita.
