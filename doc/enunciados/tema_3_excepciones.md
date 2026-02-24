@@ -18,50 +18,342 @@ Por favor, escribe en impersonal las respuestas.
 
 ### Respuesta
 
+? OPCIÓN 1: Usar el valor de retorno para indicar error
+
+Es la forma más simple y común en C.
+
+La función devuelve un valor especial que indica que ocurrió un error.
+Por ejemplo: -1 (si sabemos que nunca debería ser negativo el resultado).
+
+?? Idea
+
+Si el número es negativo ? devolvemos -1
+
+El usuario de la función debe comprobar el valor devuelto
+
+?? Ejemplo
+#include <stdio.h>
+#include <math.h>
+
+float raiz(float x) {
+    if (x < 0) {
+        return -1;  // valor especial que indica error
+    }
+    return sqrt(x);
+}
+
+int main() {
+    float resultado = raiz(-4);
+
+    if (resultado == -1) {
+        printf("Error: no se puede calcular la raiz de un numero negativo\n");
+    } else {
+        printf("Resultado: %f\n", resultado);
+    }
+
+    return 0;
+}
+? Problema de este diseño
+
+¿Qué pasa si el valor -1 fuera un resultado válido?
+No podemos distinguir entre error y resultado real.
+
+? OPCIÓN 2: Usar un parámetro adicional para indicar error
+
+Aquí separamos:
+
+El valor de retorno ? resultado
+
+Un parámetro adicional ? indica si hubo error
+
+Esto es más robusto.
+
+?? Idea
+
+Pasamos un puntero a una variable int error
+
+La función escribe en esa variable
+
+?? Ejemplo
+#include <stdio.h>
+#include <math.h>
+
+float raiz(float x, int *error) {
+    if (x < 0) {
+        *error = 1;  // indicamos error
+        return 0;    // valor irrelevante
+    }
+
+    *error = 0;      // no hay error
+    return sqrt(x);
+}
+
+int main() {
+    int error;
+    float resultado = raiz(-4, &error);
+
+    if (error) {
+        printf("Error: numero negativo\n");
+    } else {
+        printf("Resultado: %f\n", resultado);
+    }
+
+    return 0;
+}
+? Ventajas
+
+No dependemos de un valor mágico como -1
+
+Separación clara entre resultado y estado del error
+
 
 ## 2. Brevemente Â¿QuÃ© es una **"excepciÃ³n"**? Â¿Con quÃ© objetivo las usa un programador cuando implementa funciones o cuando las llama?
 
 ### Respuesta
+? ¿Qué es una excepción?
+
+Una excepción es un mecanismo para indicar que ha ocurrido un error o situación anormal durante la ejecución de un programa.
+
+En lugar de devolver un valor especial (como en C), el programa interrumpe el flujo normal y envía un aviso de error.
+
+? ¿Con qué objetivo se usan?
+
+Un programador las usa para:
+
+?? Separar el código normal del código de error
+
+?? Obligar a quien llama a la función a tratar el error
+
+?? Evitar que el programa continúe con datos incorrectos
+
+En resumen: permiten un control de errores más seguro y organizado que en C.
 
 
 ## 3. Reescribe el mismo ejemplo de raiz, pero en Java, metiendo ese mÃ©todo en una clase `Calculadora` y llama a dicho mÃ©todo desde el mÃ©todo `main`, mostrando cÃ³mo se puede controlar desde fuera.
 
 ### Respuesta
+? Ejemplo en Java usando excepciones
+
+Creamos una clase Calculadora con el método raiz.
+Si el número es negativo, lanzamos una excepción.
+
+class Calculadora {
+
+    public static double raiz(double x) {
+        if (x < 0) {
+            throw new IllegalArgumentException("Numero negativo no permitido");
+        }
+        return Math.sqrt(x);
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+
+        try {
+            double r = Calculadora.raiz(-5);
+            System.out.println("Resultado: " + r);
+        } catch (IllegalArgumentException e) {
+            System.out.println("Error: " + e.getMessage());
+        }
+
+    }
+}
+?? Idea clave
+
+throw ? lanza la excepción.
+
+try-catch ? permite controlarla desde fuera.
+
+Si ocurre error, el flujo normal se interrumpe y pasa al catch.
 
 
 ## 4. Â¿QuÃ© es **"lanzar"** una excepciÃ³n? Â¿QuÃ© es **"controlar"** o **"capturar"** una excepciÃ³n? Â¿QuÃ© es que se **"propague"** una excepciÃ³n? Â¿QuÃ© le va ocurriendo a las funciones en la pila de llamadas por donde se va propagando la excepciÃ³n? Â¿Las funciones que no la controlan se reanudan despuÃ©s de alguna forma? Explica con el mismo ejemplo anterior en Java de la raÃ­z cuadrada.
 
 ### Respuesta
+? Lanzar una excepción
+
+Es provocar el error explícitamente usando throw.
+
+En el ejemplo:
+
+if (x < 0) {
+    throw new IllegalArgumentException("Numero negativo");
+}
+
+Aquí el método raiz lanza la excepción.
+
+? Capturar (controlar) una excepción
+
+Es manejar el error usando try-catch.
+
+try {
+    Calculadora.raiz(-5);
+} catch (IllegalArgumentException e) {
+    System.out.println("Error controlado");
+}
+
+Aquí el catch la captura.
+
+? Propagarse una excepción
+
+Si un método no la captura, la excepción sube al método que lo llamó.
+
+Ejemplo:
+
+main ? llama a raiz()
+raiz() lanza excepción
+main la captura
+
+Si main tampoco la capturara ? el programa termina con error.
+
+? ¿Qué pasa en la pila de llamadas?
+
+Cuando se lanza la excepción:
+
+Se interrumpe el método actual.
+
+Se eliminan de la pila los métodos que no la capturan.
+
+Se busca un catch hacia arriba.
+
+? ¿Las funciones que no la controlan continúan?
+
+No.
+
+Si un método no la captura:
+
+Se termina inmediatamente.
+
+No continúa después de la llamada.
+
+No se reanuda.
+
+Es como si “saltara” directamente al catch.
 
 
 ## 5. Â¿QuÃ© ventajas tiene frente a C, la **"propagaciÃ³n natural"** de las excepciones a travÃ©s de la pila (*stack*) de llamadas?
 
 ### Respuesta
+? Ventajas frente a C
+
+En C el error debe comprobarse manualmente en cada función.
+Si olvidamos comprobarlo ? el programa sigue mal.
+
+En Java, la excepción:
+
+?? Se propaga automáticamente por la pila.
+
+?? No puede ignorarse “sin querer”.
+
+?? Separa claramente código normal y código de error.
+
+?? Permite capturar el error en un nivel superior (más adecuado).
+
+?? En resumen
+
+En C ? el programador debe pasar y revisar el error en cada llamada.
+En Java ? el error sube solo hasta que alguien lo capture o el programa termine.
+
+Es más seguro y más limpio.
 
 
 ## 6. En orientaciÃ³n a objetos, Â¿las excepciones suelen ser objetos? Â¿QuÃ© ventajas tiene esto en tÃ©rminos de encapsulaciÃ³n? Â¿Podemos entonces crear excepciones personalizadas?
 
 ### Respuesta
+? ¿Las excepciones son objetos?
+
+Sí.
+En Java, una excepción es un objeto (una instancia de una clase).
+
+? Ventajas (encapsulación)
+
+Como es un objeto:
+
+?? Puede guardar información del error (mensaje, código, datos…).
+
+?? El detalle del error queda encapsulado dentro del objeto.
+
+?? Solo accedemos a esa información mediante métodos (ej. getMessage()).
+
+? ¿Podemos crear excepciones personalizadas?
+
+Sí.
+
+Podemos crear nuestra propia clase de excepción para representar errores específicos de nuestra aplicación.
+
+? Esto permite definir errores más claros y organizados.
 
 
 ## 7. En relaciÃ³n con las ventajas de la encapsulaciÃ³n, comparando el ejemplo en C con Java. Â¿QuÃ© **informaciÃ³n esencial** lleva cualquier **objeto excepciÃ³n** que es muy Ãºtil tener cuando se llega a un manejador?
 
 ### Respuesta
+? Información esencial que lleva una excepción (Java)
+
+Comparado con C (donde solo devolvemos un número o código), en Java el objeto excepción incluye automáticamente:
+
+?? Mensaje descriptivo del error (getMessage()).
+
+?? Tipo de excepción (qué clase de error es).
+
+?? Pila de llamadas (stack trace) ? dónde ocurrió y cómo se llegó ahí.
+
+?? Lo más importante
+
+La stack trace es clave:
+Permite saber exactamente en qué método y línea ocurrió el error, cosa que en C hay que investigar manualmente.
+
+Esto hace el diagnóstico mucho más fácil y seguro.
 
 
 ## 8. En Java, sobre el bloque **"try-catch"**, Â¿se pueden tener mÃ¡s de un bloque `catch`? Â¿cuÃ¡ntos bloques `catch` se ejecutan?
 
 ### Respuesta
+? Respuesta
+
+Sí, un try puede tener varios catch para distintos tipos de excepción.
+
+Solo se ejecuta uno, el primero que coincida con la excepción lanzada.
 
 
 ## 9. Si las excepciones producen rupturas en el cÃ³digo llamador, Â¿cÃ³mo podemos garantizar que se ejecuta siempre finalmente un cÃ³digo necesario para cierre de ficheros, liberacion de recursos, antes de que continÃºe propagÃ¡ndose la excepciÃ³n? Pon un ejemplo en Java con `finally`, tanto con `catch` como sin Ã©l.
 
 ### Respuesta
+? Garantizar código de limpieza: finally
+
+El bloque finally siempre se ejecuta, aunque haya excepción, con o sin catch.
+Se usa para liberar recursos (archivos, conexiones, memoria…).
+
+?? Ejemplo con catch
+try {
+    double r = Calculadora.raiz(-5);
+    System.out.println(r);
+} catch (IllegalArgumentException e) {
+    System.out.println("Error: " + e.getMessage());
+} finally {
+    System.out.println("Se cierra recurso o archivo");
+}
+?? Ejemplo sin catch
+try {
+    double r = Calculadora.raiz(-5);
+    System.out.println(r);
+} finally {
+    System.out.println("Se cierra recurso o archivo");
+}
+
+En ambos casos, el mensaje del finally siempre se imprime, incluso si la excepción sigue propagándose.
 
 
 ## 10. En Java, el bloque `finally` puede ir sin `catch`? Â¿Se ejecuta siempre tanto si ocurre como si no ocurre una excepciÃ³n? Â¿Y si hay un `return` en medio del `try`?
 
 ### Respuesta
+? Respuesta
+
+Sí, un bloque finally puede ir solo con try, sin catch.
+
+Se ejecuta siempre, tanto si hay excepción como si no.
+
+Incluso si hay un return dentro del try, el finally se ejecuta antes de salir del método.
 
 
 ## 11. En Java, quÃ© son las excepciones **"controladas"** y las **"no controladas"**? Â¿QuÃ© papel juega `RuntimeException`? Pon un ejemplo de excepciones tÃ­picas controladas y no controladas que incluso nosotros mismos podrÃ­amos usar. Haz dos listas con 3 o 4 ejemplos de situaciÃ³n donde se suele preferir una excepciÃ³n controlada y donde se suele preferir una excepciÃ³n no controlada.
