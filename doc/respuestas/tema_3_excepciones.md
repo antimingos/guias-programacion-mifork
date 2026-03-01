@@ -505,5 +505,5 @@ public void procesar() throws ServicioException {
     }
 }
 
-Cuando una excepción con causa se muestra por pantalla (por ejemplo con printStackTrace()), sí se ve la causa. Java muestra primero la excepción principal y después indica “Caused by:” seguido de la excepción original y su traza, lo que facilita localizar el origen real del problema.
+Cuando una excepción con causa se muestra por pantalla (por ejemplo con printStackTrace()), sí se ve la causa. Java muestra primero la excepción principal y después indica “Caused by:” seguido de la excepción original y su traza, lo que facilita localizar el origen real del problema
 
