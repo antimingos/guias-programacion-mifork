@@ -160,22 +160,214 @@ class Linea {
 ## 7. En Java, en la composiciÃ³n fuerte, Â¿cuando el contenedor destruye los objetos? No se observa que `Linea` destruya los `Punto` explÃ­citamente, Â¿Por quÃ©?
 
 ### Respuesta
+En Java, en una composición fuerte, los objetos contenidos no pueden existir independientemente del contenedor. Sin embargo, Java no utiliza destrucción manual como en C/C++. En su lugar, cuando el objeto contenedor deja de existir (por ejemplo, deja de tener referencias), los objetos que contiene quedan también sin referencias y pasan a ser candidatos para el recolector de basura.
+
+El recolector de basura (Garbage Collector) se encarga automáticamente de liberar la memoria de aquellos objetos que ya no son accesibles. Por eso, no es necesario que el contenedor destruya explícitamente los objetos que contiene, ya que el propio sistema de memoria de Java lo gestiona.
+
+En el caso de Linea y Punto, no se observa una destrucción explícita porque Java no tiene destructores como C++. Cuando una instancia de Linea deja de usarse, los objetos Punto asociados también dejan de ser accesibles (si no hay más referencias a ellos), y el recolector de basura los eliminará automáticamente.
 
 
 ## 8. Pon un ejemplo de composicion dÃ©bil entre un departamento que tiene varios profesores. Implementa dos composiciones a la vez: entre el departamento y todos sus profesores y entre el departamento y su director, que es un profesor del departamento. Siempre debe haber un director en el departamento desde el inicio. Lanza excepciones si se viola la invariante. Emplea arrays primitivos de Java, estilo `Profesor[]`, con mÃ¡ximo 50, pero no rompas la encapsulaciÃ³n, no desveles que estÃ¡s empleando un array, permite aÃ±adir un `Profesor` al final de la lista, y eliminar un profesor dada su posiciÃ³n. Da acceso a los profesores con un mÃ©todo para saber cuÃ¡ntos hay y otro para obtener un profesor por posiciÃ³n. El director se puede cambiar por otro profesor del departamento. Sin embargo, ten en cuenta esta invariante de clase: el director debe formar siempre parte de la lista de profesores, es decir, ten cuidado al cambiar el director o al eliminar un profesor.
 
 ### Respuesta
+n una composición débil, los objetos pueden existir independientemente del contenedor. En este caso, un Departamento contiene varios Profesor, pero estos podrían existir fuera de él. Además, existe una doble relación: el departamento tiene una lista de profesores y uno de ellos actúa como director. Se debe garantizar siempre la invariante de que el director pertenece a la lista y que nunca es nulo.
+
+Para mantener la encapsulación, no se expone el array interno. Se proporcionan métodos para añadir, eliminar, consultar el número de profesores y acceder por posición. También se controla que no se elimine al director sin antes cambiarlo, y que el nuevo director ya pertenezca al departamento. Se lanzan excepciones cuando se viola alguna condición.
+
+class Profesor {
+    private String nombre;
+
+    public Profesor(String nombre) {
+        this.nombre = nombre;
+    }
+
+    public String getNombre() {
+        return nombre;
+    }
+}
+
+class Departamento {
+    private Profesor[] profesores = new Profesor[50];
+    private int numProfesores = 0;
+    private Profesor director;
+
+    public Departamento(Profesor directorInicial) {
+        if (directorInicial == null) {
+            throw new IllegalArgumentException("Debe haber un director inicial");
+        }
+        profesores[0] = directorInicial;
+        numProfesores = 1;
+        director = directorInicial;
+    }
+
+    public void añadirProfesor(Profesor p) {
+        if (p == null) throw new IllegalArgumentException();
+        if (numProfesores >= 50) throw new IllegalStateException("Límite alcanzado");
+        profesores[numProfesores++] = p;
+    }
+
+    public void eliminarProfesor(int pos) {
+        if (pos < 0 || pos >= numProfesores) throw new IndexOutOfBoundsException();
+        if (profesores[pos] == director) {
+            throw new IllegalStateException("No se puede eliminar al director");
+        }
+        for (int i = pos; i < numProfesores - 1; i++) {
+            profesores[i] = profesores[i + 1];
+        }
+        numProfesores--;
+    }
+
+    public int getNumProfesores() {
+        return numProfesores;
+    }
+
+    public Profesor getProfesor(int pos) {
+        if (pos < 0 || pos >= numProfesores) throw new IndexOutOfBoundsException();
+        return profesores[pos];
+    }
+
+    public void cambiarDirector(Profesor nuevoDirector) {
+        if (nuevoDirector == null) throw new IllegalArgumentException();
+        boolean existe = false;
+        for (int i = 0; i < numProfesores; i++) {
+            if (profesores[i] == nuevoDirector) {
+                existe = true;
+                break;
+            }
+        }
+        if (!existe) throw new IllegalArgumentException("Debe pertenecer al departamento");
+        director = nuevoDirector;
+    }
+
+    public Profesor getDirector() {
+        return director;
+    }
+}
+
+Este diseño garantiza la invariante: siempre hay un director y este pertenece al conjunto de profesores. Además, se mantiene la encapsulación y se controlan los errores mediante excepciones.
 
 
 ## 9. En Java, existen tambiÃ©n `List`, cambia y muestra cÃ³mo serÃ­a el cÃ³digo anterior empleando `List` en vez de arrays primitivos. Â¿QuÃ© parte del cÃ³digo original te has ahorrado? AdemÃ¡s, fÃ­jate en el mÃ©todo `getProfesor(int pos)`: si en su lugar existiera un mÃ©todo que devolviera todos los profesores a la vez, Â¿quÃ© problema tendrÃ­a devolver directamente la lista interna? Â¿CÃ³mo lo resolverÃ­as?
 
 ### Respuesta
+Al usar List (por ejemplo, ArrayList), la gestión del tamaño y los desplazamientos se simplifica. No es necesario controlar manualmente el número de elementos ni moverlos al eliminar, ya que la propia colección lo gestiona. Se mantiene la misma lógica de invariantes: siempre hay director y debe pertenecer a la lista.
+
+import java.util.*;
+
+class Profesor {
+    private String nombre;
+
+    public Profesor(String nombre) {
+        this.nombre = nombre;
+    }
+
+    public String getNombre() {
+        return nombre;
+    }
+}
+
+class Departamento {
+    private List<Profesor> profesores = new ArrayList<>();
+    private Profesor director;
+
+    public Departamento(Profesor directorInicial) {
+        if (directorInicial == null) {
+            throw new IllegalArgumentException("Debe haber un director inicial");
+        }
+        profesores.add(directorInicial);
+        director = directorInicial;
+    }
+
+    public void añadirProfesor(Profesor p) {
+        if (p == null) throw new IllegalArgumentException();
+        profesores.add(p);
+    }
+
+    public void eliminarProfesor(int pos) {
+        if (pos < 0 || pos >= profesores.size()) throw new IndexOutOfBoundsException();
+        if (profesores.get(pos) == director) {
+            throw new IllegalStateException("No se puede eliminar al director");
+        }
+        profesores.remove(pos);
+    }
+
+    public int getNumProfesores() {
+        return profesores.size();
+    }
+
+    public Profesor getProfesor(int pos) {
+        return profesores.get(pos);
+    }
+
+    public void cambiarDirector(Profesor nuevoDirector) {
+        if (nuevoDirector == null) throw new IllegalArgumentException();
+        if (!profesores.contains(nuevoDirector)) {
+            throw new IllegalArgumentException("Debe pertenecer al departamento");
+        }
+        director = nuevoDirector;
+    }
+
+    public Profesor getDirector() {
+        return director;
+    }
+
+    // Versión segura
+    public List<Profesor> getProfesores() {
+        return Collections.unmodifiableList(profesores);
+    }
+}
+
+Se evita escribir código para controlar el tamaño (numProfesores), comprobar límites manualmente en muchos casos y desplazar elementos al eliminar. Todo esto lo gestiona automáticamente List, haciendo el código más corto y menos propenso a errores.
+
+Si se devolviera directamente la lista interna, se rompería la encapsulación, ya que código externo podría modificarla (añadir o eliminar profesores), violando invariantes como que el director pertenezca al conjunto. Para evitarlo, se devuelve una vista no modificable (Collections.unmodifiableList) o una copia de la lista.
 
 
 ## 10. Al igual que ocurre con las excepciones en Java, que pueden encerrar causas (que son excepciones), de forma recursiva, suponen un tipo especial de composiciones, denominadas composiciones recursivas. Pon un ejemplo en Java de una `Persona`, que sea inmutable, y que tiene una madre, que es otra `Persona`. Haz un main con un ejemplo de uso con una familia de personas, desde el nieto hasta la abuela. Enumera algÃºn otro ejemplo clÃ¡sico de composiciones recursivas.
 
 ### Respuesta
+Una composición recursiva ocurre cuando una clase contiene una referencia a otra instancia de la misma clase. En este caso, una Persona tiene una madre que también es Persona. Para que sea inmutable, todos los atributos deben ser final, no deben existir setters, y el estado se fija completamente en el constructor.
+
+Se permite que la madre sea null para representar el final de la cadena (por ejemplo, una abuela sin madre conocida). De esta forma se puede construir una estructura encadenada (nieto ? madre ? abuela) sin modificar los objetos una vez creados.
+
+class Persona {
+    private final String nombre;
+    private final Persona madre;
+
+    public Persona(String nombre, Persona madre) {
+        if (nombre == null) throw new IllegalArgumentException();
+        this.nombre = nombre;
+        this.madre = madre;
+    }
+
+    public String getNombre() {
+        return nombre;
+    }
+
+    public Persona getMadre() {
+        return madre;
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        Persona abuela = new Persona("Ana", null);
+        Persona madre = new Persona("Beatriz", abuela);
+        Persona hijo = new Persona("Carlos", madre);
+
+        System.out.println(hijo.getNombre());
+        System.out.println(hijo.getMadre().getNombre());
+        System.out.println(hijo.getMadre().getMadre().getNombre());
+    }
+}
+
+Otros ejemplos clásicos de composiciones recursivas son estructuras como árboles (donde cada nodo tiene hijos que también son nodos), listas enlazadas (cada nodo apunta al siguiente) o directorios de archivos (una carpeta contiene subcarpetas del mismo tipo).
+
 
 ## 11. Â¿QuÃ© son las relaciones de composiciÃ³n "bidireccionales"? Â¿QuÃ© habrÃ­a que hacer para implementar este tipo de relaciÃ³n en el ejemplo de `Profesor` y `Departamento`?
 
 ### Respuesta
+Las relaciones de composición bidireccionales son aquellas en las que ambos objetos mantienen una referencia entre sí. Es decir, no solo el contenedor conoce a los objetos que contiene (por ejemplo, Departamento ? Profesor), sino que cada objeto contenido también conoce a su contenedor (Profesor ? Departamento). Esto permite navegar en ambos sentidos de la relación.
+
+Para implementarlo en el ejemplo, la clase Profesor debería tener un atributo que haga referencia a su Departamento. Además, al añadir o eliminar un profesor del departamento, se debe actualizar también esa referencia. Por ejemplo, al añadir un profesor, se le asigna su departamento; y al eliminarlo, se pone a null. Esto asegura que la relación sea coherente en ambos lados.
+
+Es importante mantener la consistencia de la relación en todo momento. Por ello, no se debería permitir modificar directamente el departamento desde Profesor (por ejemplo, mediante un setter público), sino que los cambios deben controlarse desde Departamento. De lo contrario, podrían aparecer inconsistencias, como que un profesor apunte a un departamento distinto del que realmente lo contiene.
