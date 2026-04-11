@@ -212,23 +212,141 @@ En Java no existe herencia múltiple de clases. Una clase solo puede extender de 
 ## 9. Las excepciones en los lenguajes orientados a objetos son objetos. Por tanto, se pueden crear excepciones personalizadas. Pon un ejemplo en Java de una excepciÃ³n personalizada (`UsuarioNoEncontradoException`), que sea *no controlada* y que ademÃ¡s este compuesto con un `Usuario`, para saber quÃ© `Usuario` dio el problema. Permite ademÃ¡s que se pueda incluir la causa, es decir, sobrecarga el constructor para tener una versiÃ³n que permita aÃ±adir la causa subyacente. 
 
 ### Respuesta
+En los lenguajes orientados a objetos, las excepciones son objetos, por lo que pueden ser creadas como clases propias. En Java, esto permite definir excepciones personalizadas para representar errores concretos de una aplicación. En este caso, se quiere crear una excepción llamada UsuarioNoEncontradoException, que será una excepción no controlada, es decir, que herede de RuntimeException.
+
+Además, la excepción debe contener un objeto Usuario para saber qué usuario ha causado el problema. Esto es un ejemplo de composición, ya que la excepción “tiene un” usuario dentro de ella. También se pide permitir incluir la causa del error, por lo que se sobrecargan los constructores para aceptar opcionalmente un Throwable como causa.
+
+Un ejemplo sencillo en Java sería el siguiente:
+
+class Usuario {
+    private String nombre;
+
+    public Usuario(String nombre) {
+        this.nombre = nombre;
+    }
+
+    public String getNombre() {
+        return nombre;
+    }
+}
+
+class UsuarioNoEncontradoException extends RuntimeException {
+
+    private Usuario usuario;
+
+    public UsuarioNoEncontradoException(Usuario usuario) {
+        super("Usuario no encontrado: " + usuario.getNombre());
+        this.usuario = usuario;
+    }
+
+    public UsuarioNoEncontradoException(Usuario usuario, Throwable causa) {
+        super("Usuario no encontrado: " + usuario.getNombre(), causa);
+        this.usuario = usuario;
+    }
+
+    public Usuario getUsuario() {
+        return usuario;
+    }
+}
+
+De esta forma, se crea una excepción personalizada no controlada que guarda información del usuario que ha provocado el problema y permite también encadenar la causa del error.
 
 
 ## 10. Herencia vs. ComposiciÃ³n. Se dice que no se debe emplear herencia simplemente por reutilizar cÃ³digo, es decir, que si quiero reutilizar cÃ³digo simplemente, no debo pensar en herencia como primera opciÃ³n Â¿por quÃ©?
 
 ### Respuesta
+No se debe usar herencia solo para reutilizar código porque la herencia crea una relación muy fuerte entre clases. Cuando una clase hereda de otra, se está diciendo que “es un tipo de” esa clase. Esto significa que la clase hija depende completamente del diseño de la clase padre, y cualquier cambio en la clase padre puede afectar a las hijas.
+
+En cambio, la composición permite reutilizar código de una forma más flexible. En composición, una clase “tiene un” objeto de otra clase, en lugar de “ser un” tipo de esa clase. Esto permite cambiar partes del comportamiento sin romper la relación entre clases, ya que solo se cambia el objeto que se usa dentro.
+
+Por eso, si solo se quiere reutilizar código, la composición suele ser una mejor opción. La herencia se reserva para cuando realmente existe una relación clara de especialización (por ejemplo, un Perro es un Animal), no solo para evitar repetir código.
 
 
 ## 11. Herencia vs. ComposiciÃ³n. Se dice que se debe *"favorecer la composiciÃ³n frente a la herencia"*, Â¿por quÃ©?
 
 ### Respuesta
+Se dice que se debe favorecer la composición frente a la herencia porque la composición permite construir clases de forma más flexible. En composición, una clase se forma usando otros objetos dentro de ella, lo que permite cambiar partes del comportamiento sin modificar toda la jerarquía de clases.
+
+En cambio, la herencia crea una relación rígida entre clases, ya que una clase hija depende directamente de la clase padre. Si la clase padre cambia, las clases hijas pueden verse afectadas sin querer, lo que hace el código más difícil de mantener y modificar.
+
+Por eso, la composición suele ser más segura y flexible, ya que permite reutilizar código sin crear dependencias fuertes. La herencia se utiliza solo cuando existe una relación clara de tipo “es un”, mientras que la composición se usa para la mayoría de los casos de reutilización.
 
 
 ## 12. Herencia vs. ComposiciÃ³n. Se dice que la *"herencia rompe la encapsulaciÃ³n"*, Â¿a quÃ© se refiere esto?
 
 ### Respuesta
+Se dice que la herencia puede “romper la encapsulación” porque una clase hija depende del funcionamiento interno de la clase padre. Aunque la encapsulación intenta ocultar los detalles internos de una clase, en la herencia esos detalles acaban siendo importantes para que la clase hija funcione correctamente.
+
+Esto ocurre porque la clase hija puede usar métodos heredados y, en algunos casos, modificar su comportamiento. Si la clase padre cambia su implementación interna, aunque mantenga los mismos métodos públicos, la clase hija puede dejar de funcionar correctamente sin que se haya cambiado su interfaz.
+
+Por este motivo, la herencia crea un acoplamiento más fuerte entre clases que la composición. En composición, cada clase mantiene mejor su independencia, ya que solo se interactúa con lo que se expone públicamente y no con detalles internos heredados.
 
 
 ## 13. Pongamos un ejemplo de dos alternativas para lo mismo. Tenemos un `Estudiante` y un `Trabajador`, ambos tienen datos en comÃºn: el DNI y el nombre. Modelemos esto de dos formas: uno por herencia, con una superclase `Persona`, y otro con composiciÃ³n, con una clase `DatosPersonales`. Se debe recibir una instancia de `DatosPersonales` en el constructor de la clase `Estudiante` y `Trabajador`.
 
 ### Respuesta
+En este caso se quiere modelar que tanto un Estudiante como un Trabajador comparten datos comunes como el DNI y el nombre. Esto se puede hacer de dos formas: usando herencia o usando composición. En ambos casos se busca reutilizar esos datos comunes.
+
+Con herencia, se crea una clase base Persona que contiene los atributos comunes. Estudiante y Trabajador heredan de Persona, por lo que reutilizan directamente esos atributos.
+
+class Persona {
+    protected String dni;
+    protected String nombre;
+
+    public Persona(String dni, String nombre) {
+        this.dni = dni;
+        this.nombre = nombre;
+    }
+}
+
+class Estudiante extends Persona {
+    public Estudiante(String dni, String nombre) {
+        super(dni, nombre);
+    }
+}
+
+class Trabajador extends Persona {
+    public Trabajador(String dni, String nombre) {
+        super(dni, nombre);
+    }
+}
+
+En este caso, la herencia indica que un estudiante “es una” persona y un trabajador “es una” persona. Los datos se comparten porque están en la clase padre.
+
+Con composición, en lugar de heredar, se crea una clase DatosPersonales que contiene el DNI y el nombre. Luego Estudiante y Trabajador reciben un objeto de esta clase en su constructor.
+
+class DatosPersonales {
+    private String dni;
+    private String nombre;
+
+    public DatosPersonales(String dni, String nombre) {
+        this.dni = dni;
+        this.nombre = nombre;
+    }
+
+    public String getDni() {
+        return dni;
+    }
+
+    public String getNombre() {
+        return nombre;
+    }
+}
+
+class Estudiante {
+    private DatosPersonales datos;
+
+    public Estudiante(DatosPersonales datos) {
+        this.datos = datos;
+    }
+}
+
+class Trabajador {
+    private DatosPersonales datos;
+
+    public Trabajador(DatosPersonales datos) {
+        this.datos = datos;
+    }
+}
+
+En este segundo caso, cada clase “tiene unos datos personales” en lugar de ser una persona. Esto hace que el diseño sea más flexible, ya que los datos pueden reutilizarse sin depender de una jerarquía de herencia.
