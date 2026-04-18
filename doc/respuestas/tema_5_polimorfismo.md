@@ -131,23 +131,147 @@ Por tanto, incluso en ejemplos básicos de Java, el polimorfismo ya está presente
 ## 7. Â¿QuÃ© es una **"clase abstracta"**? Â¿QuÃ© es un **"mÃ©todo abstracto"**? Â¿Puedo crear instancias de una clase abstracta? Pongamos un ejemplo en Java: Redefinamos `Soldado`, hagamos que, ademÃ¡s del mÃ©todo `saluda` que ya tenÃ­a, tenga un mÃ©todo `atacar`, que sea abstracto y que cada tipo de soldado haga su acciÃ³n cuando se le pida atacar. Â¿Donde debemos poner `abstract`?
 
 ### Respuesta
+Una clase abstracta es una clase que se utiliza como base para otras, pero que no puede instanciarse directamente. Sirve para definir comportamiento común y obligar a las subclases a completar ciertas partes. Un método abstracto es un método que no tiene implementación, solo se declara, y las subclases están obligadas a definirlo.
+
+No es posible crear objetos de una clase abstracta (no se puede hacer new sobre ella). Su función es ser heredada. Esto es útil cuando se quiere definir una estructura común, pero dejando algunos comportamientos sin concretar, para que cada subclase los implemente de forma distinta (polimorfismo).
+
+La palabra clave abstract se coloca tanto en la clase como en el método que no tiene implementación:
+
+abstract class Soldado {
+    public void saluda() {
+        System.out.println("¡Hola!");
+    }
+
+    public abstract void atacar();
+}
+
+class SoldadoEspada extends Soldado {
+    public void atacar() {
+        System.out.println("Ataca con espada");
+    }
+}
+
+class SoldadoArco extends Soldado {
+    public void atacar() {
+        System.out.println("Ataca con arco");
+    }
+}
+
+En este caso, Soldado es abstracta porque tiene un método abstracto (atacar). Cada tipo de soldado define su propia forma de atacar, cumpliendo con la obligación impuesta por la clase base.
 
 
 ## 8. Â¿QuÃ© efecto tiene la palabra clave `final` sobre mÃ©todos y clases en Java? Â¿CÃ³mo se relaciona con el polimorfismo? Â¿Conoces algÃºn ejemplo de clase `final` en la propia API estÃ¡ndar de Java?
 
 ### Respuesta
+La palabra clave final en Java indica que algo no puede modificarse o extenderse. Aplicada a una clase, significa que no se puede heredar de ella. Aplicada a un método, significa que no puede ser sobrescrito (override) en las subclases. Esto limita el comportamiento dinámico típico de la herencia.
+
+En relación con el polimorfismo, final restringe su uso. El polimorfismo se basa en poder redefinir métodos en subclases y decidir en tiempo de ejecución cuál ejecutar. Si un método es final, no puede redefinirse, por lo que se pierde esa capacidad. Si una clase es final, directamente no puede participar en jerarquías de herencia.
+
+Un ejemplo típico de la API estándar es la clase String, que es final. Esto significa que no se puede crear una subclase de String. Se hace así por motivos de seguridad y eficiencia, ya que su comportamiento debe ser inmutable y predecible.
 
 
 ## 9. En Java, quÃ© son las **"interfaces"**? Â¿Son como clases abstractas? Â¿Una clase puede implementar mÃ¡s de una interfaz?
 
 ### Respuesta
+Las interfaces en Java son un tipo especial que define métodos sin implementación (solo la firma) que otras clases deben implementar. Sirven para establecer un “contrato”: cualquier clase que implemente la interfaz se compromete a definir esos métodos. A diferencia de una clase, una interfaz no define comportamiento concreto (al menos en su forma básica).
+
+Se parecen a las clases abstractas en que ambas pueden tener métodos sin implementar, pero no son iguales. Una clase abstracta puede tener atributos y métodos con código, mientras que una interfaz (en el enfoque básico) solo declara métodos. Además, una clase solo puede heredar de una clase abstracta, pero el uso de interfaces es más flexible.
+
+Sí, una clase puede implementar varias interfaces a la vez. Esto permite simular una forma de “herencia múltiple” en Java, ya que la clase puede adoptar comportamientos definidos en diferentes interfaces al mismo tiempo.
 
 
 ## 10. Vamos a poner un ejemplo nuevo con polimorfismo. Queremos implementar una clase `Punto`, con un mÃ©todo `calcularDistanciaA`, que permite calcular la distancia a otro `Punto`. Sin embargo, como queremos trabajar con puntos 2D y 3D, haz que ese mÃ©todo sea abstracto y haya dos implementaciones de ese cÃ¡lculo de distancia. Emplea `instanceof` y *downcasting* para verificar que se recibe un punto compatible y poder calcular correctamente la distancia siempre entre puntos del mismo subtipo. Aprovecha este diseÃ±o para crear ahora una clase `Linea`, que acepta `Punto`, sin saber de quÃ© tipo es, y es capaz de dar su longitud independientemente de las dimensiones de sus puntos (las cuales desconoce).
 
 ### Respuesta
+Se puede definir una clase abstracta `Punto` con un método `calcularDistanciaA` también abstracto. De esta forma, se obliga a que cada subtipo (2D o 3D) implemente su propia fórmula de distancia. El uso de `instanceof` y *downcasting* permite comprobar que los puntos son del mismo tipo antes de realizar el cálculo, evitando errores.
+
+Cada subclase (`Punto2D` y `Punto3D`) implementa el método con su lógica correspondiente. Si se recibe un punto de otro tipo, se puede lanzar una excepción. Esto asegura que solo se calculen distancias entre puntos compatibles, manteniendo coherencia en el diseño.
+
+```java
+abstract class Punto {
+    public abstract double calcularDistanciaA(Punto otro);
+}
+
+class Punto2D extends Punto {
+    double x, y;
+
+    public Punto2D(double x, double y) {
+        this.x = x;
+        this.y = y;
+    }
+
+    public double calcularDistanciaA(Punto otro) {
+        if (otro instanceof Punto2D) {
+            Punto2D p = (Punto2D) otro;
+            return Math.sqrt(Math.pow(x - p.x, 2) + Math.pow(y - p.y, 2));
+        } else {
+            throw new IllegalArgumentException("Tipo de punto incompatible");
+        }
+    }
+}
+
+class Punto3D extends Punto {
+    double x, y, z;
+
+    public Punto3D(double x, double y, double z) {
+        this.x = x;
+        this.y = y;
+        this.z = z;
+    }
+
+    public double calcularDistanciaA(Punto otro) {
+        if (otro instanceof Punto3D) {
+            Punto3D p = (Punto3D) otro;
+            return Math.sqrt(
+                Math.pow(x - p.x, 2) +
+                Math.pow(y - p.y, 2) +
+                Math.pow(z - p.z, 2)
+            );
+        } else {
+            throw new IllegalArgumentException("Tipo de punto incompatible");
+        }
+    }
+}
+```
+
+Gracias al polimorfismo, la clase `Linea` puede trabajar con `Punto` sin conocer si es 2D o 3D. Simplemente usa el método común definido en la clase abstracta, y cada objeto responde según su tipo real.
+
+```java
+class Linea {
+    Punto a, b;
+
+    public Linea(Punto a, Punto b) {
+        this.a = a;
+        this.b = b;
+    }
+
+    public double longitud() {
+        return a.calcularDistanciaA(b);
+    }
+}
+```
+
+Así, `Linea` es independiente del tipo concreto de punto, y el comportamiento correcto se decide en tiempo de ejecución (polimorfismo).
 
 
 ## 11. Â¿QuÃ© es la **"herencia de interfaces"** en Java? Â¿Existe **"herencia mÃºltiple de interfaces"**? Pon un ejemplo de una interfaz `Fichero` que tenga un mÃ©todo para leer su contenido en forma de `String` y luego dicha interfaz sea extendida por otra que sea `FicheroEscribible` que permita enviar contenido e incluso eliminar el fichero.
 
 ### Respuesta
+La **herencia de interfaces** en Java consiste en que una interfaz puede **extender otra interfaz**, heredando sus métodos. Esto permite crear jerarquías de comportamiento, igual que con clases, pero solo definiendo contratos. Así, una interfaz hija incluye todos los métodos de la interfaz padre y puede añadir nuevos.
+
+Sí, existe la **herencia múltiple de interfaces**. Una interfaz puede extender varias interfaces a la vez, lo que permite combinar distintos comportamientos. Esto no genera los problemas típicos de la herencia múltiple de clases, porque las interfaces (en su forma básica) no tienen implementación, solo declaraciones de métodos.
+
+Un ejemplo sería definir una interfaz `Fichero` con un método de lectura, y luego extenderla con `FicheroEscribible`, que añade más funcionalidades:
+
+```java id="k92h3s"
+interface Fichero {
+    String leer();
+}
+
+interface FicheroEscribible extends Fichero {
+    void escribir(String contenido);
+    void eliminar();
+}
+```
+
+En este caso, cualquier clase que implemente `FicheroEscribible` estará obligada a implementar tanto `leer()` como los nuevos métodos añadidos, reutilizando y ampliando el contrato original.
