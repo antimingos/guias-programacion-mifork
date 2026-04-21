@@ -247,7 +247,7 @@ public class Ejemplo {
 }
 ```
 
-Con el método genérico, se evita el *downcasting* porque el compilador ya conoce el tipo de retorno. Además, se fuerza que ambos parámetros sean del mismo tipo (`T`), mientras que con `Object` se podrían mezclar tipos distintos sin error en compilación, aumentando el riesgo de fallos en tiempo de ejecución.
+Con el método genérico, se evita el *downcasting* porque el compilador ya conoce el tipo de retorno. Además, se fuerza que ambos parámetros sean del mismo tipo (`T`), mientras que con `Object` se podrían mezclar tipos distintos sin error en compilación, aumentando el riesgo de fallos en tiempo de ejecución .
 
 
 ## 9. Â¿Se pueden establecer restricciones en los parÃ¡metros de tipo? Por ejemplo, si quiero definir un tipo genÃ©rico `<T>`, Â¿puedo decir que tenga que ser, al menos, un nÃºmero para poder tratarlo como tal? Pon un ejemplo en Java de un `Punto` con dos coordenadas, metodos `getX`, `getY`, y una funciÃ³n `calcularDistanciaA` otro `Punto`. Permite que esas coordenadas sean cualquier tipo de nÃºmero. Pon dos soluciones: una simplemente creando coordenadas de tipo `Number` y otra aÃ±adiendo generics para reforzar el chequeo de tipos y saber exactamente con quÃ© tipo de nÃºmero trabaja el `Punto`. En este caso y respecto al "type erasure", Â¿cuÃ¡l es el tipo final tras la compilaciÃ³n?
