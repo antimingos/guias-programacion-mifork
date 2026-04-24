@@ -253,11 +253,67 @@ Con el método genérico, se evita el *downcasting* porque el compilador ya conoce
 ## 9. Â¿Se pueden establecer restricciones en los parÃ¡metros de tipo? Por ejemplo, si quiero definir un tipo genÃ©rico `<T>`, Â¿puedo decir que tenga que ser, al menos, un nÃºmero para poder tratarlo como tal? Pon un ejemplo en Java de un `Punto` con dos coordenadas, metodos `getX`, `getY`, y una funciÃ³n `calcularDistanciaA` otro `Punto`. Permite que esas coordenadas sean cualquier tipo de nÃºmero. Pon dos soluciones: una simplemente creando coordenadas de tipo `Number` y otra aÃ±adiendo generics para reforzar el chequeo de tipos y saber exactamente con quÃ© tipo de nÃºmero trabaja el `Punto`. En este caso y respecto al "type erasure", Â¿cuÃ¡l es el tipo final tras la compilaciÃ³n?
 
 ### Respuesta
+Sí, en Java se pueden establecer **restricciones (bounds)** sobre los parámetros de tipo usando `extends`. Esto permite indicar que un tipo genérico debe ser, por ejemplo, un subtipo de `Number`, lo que permite usar operaciones numéricas de forma más controlada.
+
+Una primera solución simple es usar directamente `Number`, pero en este caso se pierde información del tipo concreto de número (Integer, Double, etc.) y es necesario convertir a `double` para operar.
+
+```java id="n1p2q3"
+public class Punto {
+    private Number x;
+    private Number y;
+
+    public Punto(Number x, Number y) {
+        this.x = x;
+        this.y = y;
+    }
+
+    public Number getX() { return x; }
+    public Number getY() { return y; }
+
+    public double distanciaA(Punto p) {
+        double dx = x.doubleValue() - p.x.doubleValue();
+        double dy = y.doubleValue() - p.y.doubleValue();
+        return Math.sqrt(dx * dx + dy * dy);
+    }
+}
+```
+
+Una segunda solución usa genéricos con restricción `<T extends Number>`, lo que mejora el chequeo de tipos y permite saber el tipo exacto de número usado en cada instancia del punto.
+
+```java id="r4s5t6"
+public class Punto<T extends Number> {
+    private T x;
+    private T y;
+
+    public Punto(T x, T y) {
+        this.x = x;
+        this.y = y;
+    }
+
+    public T getX() { return x; }
+    public T getY() { return y; }
+
+    public double distanciaA(Punto<T> p) {
+        double dx = x.doubleValue() - p.x.doubleValue();
+        double dy = y.doubleValue() - p.y.doubleValue();
+        return Math.sqrt(dx * dx + dy * dy);
+    }
+}
+```
+
+Respecto al **type erasure**, en ambos casos genéricos (`Punto<T>`), el tipo `T` se elimina en compilación y se sustituye por su límite superior (`Number`). Por tanto, en el código final compilado, el tipo real de `T` es `Number`, no el tipo concreto (`Integer`, `Double`, etc.).
 
 
 ## 10. Sobre las soluciones anteriores. Si bien ambas permiten trabajar con distintos tipos de nÃºmero sin duplicar la clase `Punto`, reflexiona sobre el refuerzo del chequeo de tipos con generics. Â¿Permiten ambas crear un punto con una coordenada de tipo entero y la otra coordenada de tipo real? Â¿QuÃ© tipo devuelve el `getX` con la solucion sin generics y quÃ© tipo devuelve el que tiene la soluciÃ³n con generics?
 
 ### Respuesta
+En la solución sin *generics*, al usar directamente `Number` para ambas coordenadas, sí es posible crear un punto con una coordenada entera y otra real, porque ambos (`Integer`, `Double`, etc.) son subtipos de `Number`. Sin embargo, esto implica menos control sobre la consistencia del tipo entre coordenadas.
+
+En este caso, los métodos `getX()` y `getY()` devuelven siempre `Number`, independientemente del tipo real almacenado. Esto obliga a convertir manualmente a `int`, `double`, etc., según se necesite.
+
+En la solución con *generics* `<T extends Number>`, no se permite mezclar tipos distintos dentro del mismo `Punto`. Si un punto se crea como `Punto<Integer>`, ambas coordenadas deben ser `Integer`; si es `Punto<Double>`, ambas deben ser `Double`. Esto refuerza el chequeo de tipos en compilación.
+
+En este caso, `getX()` devuelve exactamente el tipo `T`, por lo que el compilador ya conoce si es `Integer`, `Double`, etc., evitando conversiones explícitas y reduciendo errores en tiempo de ejecución.
 
 
 ## 11. Hagamos un ejemplo avanzado. El siguiente cÃ³digo, con interfaz `Punto`, que define un mÃ©todo `calcularDistanciaA(Punto p)`, junto con las implementaciones `Punto2D` y `Punto3D`. AÃ±ade generics para asegurarnos que la sobreescritura del mÃ©todo calcular distancia a otro `Punto` siempre es sobre un `Punto` del mismo tipo, evitando `instanceof` y el downcasting.
@@ -290,13 +346,107 @@ public class Punto3D implements Punto {
 ```
 
 ### Respuesta
+Se puede evitar el uso de `instanceof` y el *downcasting* usando **generics con recursión de tipos (F-bounded polymorphism)**. La idea es que cada `Punto` solo pueda trabajar con puntos del mismo tipo concreto.
+
+Se redefine la interfaz como genérica, indicando que el parámetro de tipo representa el propio subtipo de `Punto`.
+
+```java id="u1v2w3"
+public interface Punto<T extends Punto<T>> {
+    double distanciaA(T p);
+}
+```
+
+De este modo, `Punto2D` solo podrá calcular distancia con otro `Punto2D`, y lo mismo para `Punto3D`, garantizando el chequeo en compilación.
+
+```java id="x4y5z6"
+public class Punto2D implements Punto<Punto2D> {
+    private final double x, y;
+
+    public Punto2D(double x, double y) {
+        this.x = x;
+        this.y = y;
+    }
+
+    @Override
+    public double distanciaA(Punto2D p) {
+        return Math.sqrt(Math.pow(x - p.x, 2)
+                       + Math.pow(y - p.y, 2));
+    }
+}
+```
+
+```java id="a7b8c9"
+public class Punto3D implements Punto<Punto3D> {
+    private final double x, y, z;
+
+    public Punto3D(double x, double y, double z) {
+        this.x = x;
+        this.y = y;
+        this.z = z;
+    }
+
+    @Override
+    public double distanciaA(Punto3D p) {
+        return Math.sqrt(Math.pow(x - p.x, 2)
+                       + Math.pow(y - p.y, 2)
+                       + Math.pow(z - p.z, 2));
+    }
+}
+```
+
+Con este diseño, el compilador impide pasar un `Punto2D` a un `Punto3D`, eliminando la necesidad de `instanceof` y evitando errores en tiempo de ejecución.
 
 
 ## 12. Dado que `String` es subtipo de `Object`, Â¿significa eso que `List<String>` es subtipo de `List<Object>`? Â¿Y que `String[]` es subtipo de `Object[]`? Razona por quÃ© la respuesta es diferente en cada caso y quÃ© problema en tiempo de ejecuciÃ³n puede aparecer con los arrays. A partir de estos ejemplos, define quÃ© significa que un tipo genÃ©rico sea **covariante**, **contravariante** o **invariante** respecto a su parÃ¡metro de tipo.
 
 ### Respuesta
+No, aunque `String` sí es subtipo de `Object`, **`List<String>` no es subtipo de `List<Object>`** en Java. Esto se debe a que los genéricos en Java son **invariantes**, es decir, aunque exista relación entre los tipos base, no se hereda la relación entre los tipos parametrizados. Esto evita errores de seguridad de tipos en compilación.
+
+En cambio, los arrays sí son diferentes: **`String[]` sí es subtipo de `Object[]`** porque los arrays en Java son **covariantes**. Esto permite asignar un array de `String` a una referencia de `Object[]`.
+
+El problema es que esta covarianza en arrays puede provocar errores en tiempo de ejecución. Por ejemplo, si se trata un `String[]` como `Object[]`, el compilador lo permite, pero en ejecución se puede intentar insertar un `Integer`, lo que genera una excepción `ArrayStoreException`.
+
+```java id="b1c2d3"
+Object[] arr = new String[2];
+arr[0] = "hola";
+arr[1] = 123; // error en ejecución (ArrayStoreException)
+```
+
+A partir de esto:
+
+* **Covariante**: si `A` es subtipo de `B`, entonces `F(A)` es subtipo de `F(B)` (ej: arrays en Java).
+* **Contravariante**: si `A` es subtipo de `B`, entonces `F(B)` es subtipo de `F(A)` (se usa en algunos casos con `? super T` en genéricos).
+* **Invariante**: no existe relación entre `F(A)` y `F(B)` aunque `A` y `B` estén relacionados (caso de `List<T>` en Java).
+
+En resumen, Java hace los genéricos invariantes para evitar problemas de seguridad, mientras que los arrays son covariantes y pueden provocar errores en ejecución.
+
 
 
 ## 13. Java permite recuperar covarianza y contravarianza en tipos genÃ©ricos de forma controlada mediante **wildcards**. Â¿QuÃ© es un wildcard (`?`)? Muestra la diferencia entre `List<? extends T>` y `List<? super T>`, indicando en quÃ© casos se usa cada uno. Pon dos ejemplos: (i) un mÃ©todo que reciba una lista de nÃºmeros y calcule su suma, usando `? extends`; (ii) un mÃ©todo que reciba una lista y le aÃ±ada varios nÃºmeros enteros, usando `? super`.
 
 ### Respuesta
+Un **wildcard** (`?`) en Java representa un tipo desconocido dentro de los genéricos. Permite flexibilizar el uso de colecciones cuando no es necesario conocer el tipo exacto, pero sí su relación con una clase base.
+
+`List<? extends T>` indica **covarianza**: la lista puede ser de `T` o de cualquier subtipo de `T`. Se usa cuando solo se necesita **leer** elementos como `T`, pero no añadirlos, porque no se conoce el tipo exacto de la lista.
+
+```java id="c1d2e3"
+public static double suma(List<? extends Number> lista) {
+    double suma = 0;
+    for (Number n : lista) {
+        suma += n.doubleValue();
+    }
+    return suma;
+}
+```
+
+`List<? super T>` indica **contravarianza**: la lista puede ser de `T` o de cualquier supertipo de `T`. Se usa cuando se necesita **escribir** elementos de tipo `T`, pero no se garantiza el tipo exacto al leer.
+
+```java id="f4g5h6"
+public static void añadirEnteros(List<? super Integer> lista) {
+    lista.add(1);
+    lista.add(2);
+    lista.add(3);
+}
+```
+
+En resumen, `extends` se usa para lectura segura (productor de datos), mientras que `super` se usa para escritura segura (consumidor de datos), siguiendo el principio PECS (Producer Extends, Consumer Super).
